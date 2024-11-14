@@ -396,6 +396,29 @@ export type RecommendedProductsQuery = {
   };
 };
 
+export type CategoriesMetaobjectQueryVariables = StorefrontAPI.Exact<{
+  [key: string]: never;
+}>;
+
+export type CategoriesMetaobjectQuery = {
+  categories?: StorefrontAPI.Maybe<{
+    childCategories?: StorefrontAPI.Maybe<{
+      references?: StorefrontAPI.Maybe<{
+        nodes: Array<{
+          name?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.MetaobjectField, 'value'>
+          >;
+          collection?: StorefrontAPI.Maybe<{
+            reference?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Collection, 'handle'>
+            >;
+          }>;
+        }>;
+      }>;
+    }>;
+  }>;
+};
+
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
   articleHandle: StorefrontAPI.Scalars['String']['input'];
   blogHandle: StorefrontAPI.Scalars['String']['input'];
@@ -1223,6 +1246,10 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment RecommendedProduct on Product {\n    id\n    title\n    handle\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    images(first: 1) {\n      nodes {\n        id\n        url\n        altText\n        width\n        height\n      }\n    }\n  }\n  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    products(first: 250, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...RecommendedProduct\n      }\n    }\n  }\n': {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
+  };
+  '#graphql\nquery CategoriesMetaobject {\n  categories: metaobject(\n    handle: {handle: "hardware", type: "category_metaobject"}\n  ) {\n    childCategories: field(key: "children_categories") {\n      references(first: 10) {\n        nodes {\n          ... on Metaobject {\n            name: field(key: "name") {\n              value\n            }\n            collection: field(key: "collection") {\n              reference {\n                ... on Collection {\n                  handle\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
+    return: CategoriesMetaobjectQuery;
+    variables: CategoriesMetaobjectQueryVariables;
   };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      articleByHandle(handle: $articleHandle) {\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;

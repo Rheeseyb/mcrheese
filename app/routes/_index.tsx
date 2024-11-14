@@ -26,13 +26,22 @@ export async function loader(args: LoaderFunctionArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context}: LoaderFunctionArgs) {
-  const [{collections}] = await Promise.all([
+  const [{collections}, {categories}] = await Promise.all([
     context.storefront.query(FEATURED_COLLECTION_QUERY),
+    context.storefront.query(CATEGORIES_METAOBJECT_QUERY),
     // Add other queries here, so that they are loaded in parallel
   ]);
 
+  const childCategories = (
+    categories?.childCategories?.references?.nodes ?? []
+  ).map((category) => ({
+    name: category.name?.value ?? null,
+    collectionHandle: category.collection?.reference?.handle ?? null,
+  }));
+
   return {
     featuredCollection: collections.nodes[0],
+    categories: childCategories,
   };
 }
 
@@ -68,8 +77,23 @@ export default function Homepage() {
   const data = useLoaderData<typeof loader>();
   return (
     <div className="home">
+      <NavigationSidebar categories={data.categories} />
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
+    </div>
+  );
+}
+
+function NavigationSidebar({
+  categories,
+}: {
+  categories: {name: string; collectionHandle: string}[];
+}) {
+  return (
+    <div>
+      {categories.map((category) => (
+        <div key={category.collectionHandle}>{category.name}</div>
+      ))}
     </div>
   );
 }
@@ -188,4 +212,31 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
+` as const;
+
+const CATEGORIES_METAOBJECT_QUERY = `#graphql
+query CategoriesMetaobject {
+  categories: metaobject(
+    handle: {handle: "hardware", type: "category_metaobject"}
+  ) {
+    childCategories: field(key: "children_categories") {
+      references(first: 250) {
+        nodes {
+          ... on Metaobject {
+            name: field(key: "name") {
+              value
+            }
+            collection: field(key: "collection") {
+              reference {
+                ... on Collection {
+                  handle
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 ` as const;
