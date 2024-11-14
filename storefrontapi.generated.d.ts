@@ -1247,7 +1247,7 @@ interface GeneratedQueryTypes {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
   };
-  '#graphql\nquery CategoriesMetaobject {\n  categories: metaobject(\n    handle: {handle: "hardware", type: "category_metaobject"}\n  ) {\n    childCategories: field(key: "children_categories") {\n      references(first: 10) {\n        nodes {\n          ... on Metaobject {\n            name: field(key: "name") {\n              value\n            }\n            collection: field(key: "collection") {\n              reference {\n                ... on Collection {\n                  handle\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
+  '#graphql\nquery CategoriesMetaobject {\n  categories: metaobject(\n    handle: {handle: "hardware", type: "category_metaobject"}\n  ) {\n    childCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            name: field(key: "name") {\n              value\n            }\n            collection: field(key: "collection") {\n              reference {\n                ... on Collection {\n                  handle\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
     return: CategoriesMetaobjectQuery;
     variables: CategoriesMetaobjectQueryVariables;
   };
