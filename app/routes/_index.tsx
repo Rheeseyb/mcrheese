@@ -76,10 +76,19 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 export default function Homepage() {
   const data = useLoaderData<typeof loader>();
   return (
-    <div className="home">
-      <NavigationSidebar categories={data.categories} />
-      <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '[navigation] 200px [content] 1fr',
+      }}
+    >
+      <div style={{gridColumn: 'navigation'}}>
+        <NavigationSidebar categories={data.categories} />
+      </div>
+      <div style={{gridColumn: 'content'}}>
+        <FeaturedCollection collection={data.featuredCollection} />
+        <RecommendedProducts products={data.recommendedProducts} />
+      </div>
     </div>
   );
 }
@@ -90,7 +99,7 @@ function NavigationSidebar({
   categories: {name: string | null; collectionHandle: string | null}[];
 }) {
   return (
-    <div>
+    <div style={{}}>
       {categories.map((category) => (
         <div key={category.collectionHandle}>{category.name}</div>
       ))}
@@ -108,6 +117,7 @@ function FeaturedCollection({
   return (
     <Link
       className="featured-collection"
+      style={{}}
       to={`/collections/${collection.handle}`}
     >
       {image && (
@@ -126,7 +136,7 @@ function RecommendedProducts({
   products: Promise<RecommendedProductsQuery | null>;
 }) {
   return (
-    <div className="recommended-products">
+    <div className="recommended-products" style={{}}>
       <h2>Recommended Products</h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
