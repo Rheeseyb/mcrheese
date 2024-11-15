@@ -396,6 +396,68 @@ export type RecommendedProductsQuery = {
   };
 };
 
+export type CategoryBasicFieldsFragment = {
+  categoryMetafieldId: StorefrontAPI.Metaobject['id'];
+} & {
+  name?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+  image?: StorefrontAPI.Maybe<{
+    reference?: StorefrontAPI.Maybe<{
+      image?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText' | 'width' | 'height'>
+      >;
+    }>;
+  }>;
+  collection?: StorefrontAPI.Maybe<{
+    reference?: StorefrontAPI.Maybe<{
+      collectionHandle: StorefrontAPI.Collection['handle'];
+    }>;
+  }>;
+};
+
+export type CategoryFieldsFragment = {
+  categoryMetafieldId: StorefrontAPI.Metaobject['id'];
+} & {
+  subCategories?: StorefrontAPI.Maybe<{
+    references?: StorefrontAPI.Maybe<{
+      nodes: Array<
+        {categoryMetafieldId: StorefrontAPI.Metaobject['id']} & {
+          name?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.MetaobjectField, 'value'>
+          >;
+          image?: StorefrontAPI.Maybe<{
+            reference?: StorefrontAPI.Maybe<{
+              image?: StorefrontAPI.Maybe<
+                Pick<
+                  StorefrontAPI.Image,
+                  'id' | 'url' | 'altText' | 'width' | 'height'
+                >
+              >;
+            }>;
+          }>;
+          collection?: StorefrontAPI.Maybe<{
+            reference?: StorefrontAPI.Maybe<{
+              collectionHandle: StorefrontAPI.Collection['handle'];
+            }>;
+          }>;
+        }
+      >;
+    }>;
+  }>;
+  name?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+  image?: StorefrontAPI.Maybe<{
+    reference?: StorefrontAPI.Maybe<{
+      image?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.Image, 'id' | 'url' | 'altText' | 'width' | 'height'>
+      >;
+    }>;
+  }>;
+  collection?: StorefrontAPI.Maybe<{
+    reference?: StorefrontAPI.Maybe<{
+      collectionHandle: StorefrontAPI.Collection['handle'];
+    }>;
+  }>;
+};
+
 export type CategoriesMetaobjectQueryVariables = StorefrontAPI.Exact<{
   [key: string]: never;
 }>;
@@ -406,14 +468,6 @@ export type CategoriesMetaobjectQuery = {
       references?: StorefrontAPI.Maybe<{
         nodes: Array<
           {categoryMetafieldId: StorefrontAPI.Metaobject['id']} & {
-            name?: StorefrontAPI.Maybe<
-              Pick<StorefrontAPI.MetaobjectField, 'value'>
-            >;
-            collection?: StorefrontAPI.Maybe<{
-              reference?: StorefrontAPI.Maybe<{
-                collectionHandle: StorefrontAPI.Collection['handle'];
-              }>;
-            }>;
             subCategories?: StorefrontAPI.Maybe<{
               references?: StorefrontAPI.Maybe<{
                 nodes: Array<
@@ -421,6 +475,16 @@ export type CategoriesMetaobjectQuery = {
                     name?: StorefrontAPI.Maybe<
                       Pick<StorefrontAPI.MetaobjectField, 'value'>
                     >;
+                    image?: StorefrontAPI.Maybe<{
+                      reference?: StorefrontAPI.Maybe<{
+                        image?: StorefrontAPI.Maybe<
+                          Pick<
+                            StorefrontAPI.Image,
+                            'id' | 'url' | 'altText' | 'width' | 'height'
+                          >
+                        >;
+                      }>;
+                    }>;
                     collection?: StorefrontAPI.Maybe<{
                       reference?: StorefrontAPI.Maybe<{
                         collectionHandle: StorefrontAPI.Collection['handle'];
@@ -428,6 +492,24 @@ export type CategoriesMetaobjectQuery = {
                     }>;
                   }
                 >;
+              }>;
+            }>;
+            name?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.MetaobjectField, 'value'>
+            >;
+            image?: StorefrontAPI.Maybe<{
+              reference?: StorefrontAPI.Maybe<{
+                image?: StorefrontAPI.Maybe<
+                  Pick<
+                    StorefrontAPI.Image,
+                    'id' | 'url' | 'altText' | 'width' | 'height'
+                  >
+                >;
+              }>;
+            }>;
+            collection?: StorefrontAPI.Maybe<{
+              reference?: StorefrontAPI.Maybe<{
+                collectionHandle: StorefrontAPI.Collection['handle'];
               }>;
             }>;
           }
@@ -1265,7 +1347,7 @@ interface GeneratedQueryTypes {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
   };
-  '#graphql\nquery CategoriesMetaobject {\n  categories: metaobject(\n    handle: {handle: "hardware", type: "category_metaobject"}\n  ) {\n    childCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            name: field(key: "name") {\n              value\n            }\n            categoryMetafieldId: id\n            collection: field(key: "collection") {\n              reference {\n                ... on Collection {\n                  collectionHandle: handle\n                }\n              }\n            }\n            subCategories: field(key: "children_categories") {\n              references(first: 250) {\n                nodes {\n                  ... on Metaobject {\n                    name: field(key: "name") {\n                      value\n                    }\n                    categoryMetafieldId: id\n                    collection: field(key: "collection") {\n                      reference {\n                        ... on Collection {\n                          collectionHandle: handle\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
+  '#graphql\n  fragment CategoryBasicFields on Metaobject {\n    name: field(key: "name") {\n      value\n    }\n    image: field(key: "image") {\n      reference {\n        ... on MediaImage {\n          image {\n            id\n            url\n            altText\n            width\n            height\n          }\n        }\n      }\n    }\n    categoryMetafieldId: id\n    collection: field(key: "collection") {\n      reference {\n        ... on Collection {\n          collectionHandle: handle\n        }\n      }\n    }\n  }\n\n  fragment CategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...CategoryBasicFields\n          }\n        }\n      }\n    }\n  }\n\n  query CategoriesMetaobject {\n    categories: metaobject(\n      handle: {handle: "hardware", type: "category_metaobject"}\n    ) {\n      childCategories: field(key: "children_categories") {\n        references(first: 250) {\n          nodes {\n            ... on Metaobject {\n              ...CategoryFields\n            }\n          }\n        }\n      }\n    }\n  }\n': {
     return: CategoriesMetaobjectQuery;
     variables: CategoriesMetaobjectQueryVariables;
   };

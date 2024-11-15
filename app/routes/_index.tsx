@@ -7,6 +7,7 @@ import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
+import type {Image as ImageType} from '@shopify/hydrogen/storefront-api-types';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
@@ -22,11 +23,17 @@ export async function loader(args: LoaderFunctionArgs) {
   return defer({...deferredData, ...criticalData});
 }
 
+type CategoryImage = Pick<
+  ImageType,
+  'id' | 'url' | 'altText' | 'width' | 'height'
+>;
+
 type Category = {
   name: string | null;
   categoryMetafieldId: string;
   subCategories: Category[];
   collectionHandle: string | null;
+  image: CategoryImage | null;
 };
 
 type CategoryNode = NonNullable<
@@ -50,6 +57,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
     return {
       name: category.name?.value ?? null,
       categoryMetafieldId: category.categoryMetafieldId,
+      image: category.image?.reference?.image ?? null,
       subCategories:
         category.subCategories?.references?.nodes.map(processCategory) ?? [],
       collectionHandle:
@@ -116,7 +124,7 @@ export default function Homepage() {
 
 function NavigationSidebar({categories}: {categories: Category[]}) {
   return (
-    <div style={{}}>
+    <div style={{fontSize: 11}}>
       {categories.map((category) => (
         <div key={category.collectionHandle}>{category.name}</div>
       ))}
@@ -129,7 +137,16 @@ function AllCategories({categories}: {categories: Category[]}) {
     <div>
       {categories.map((category) => (
         <div key={category.collectionHandle}>
-          <div>{category.name}</div>
+          <div
+            style={{
+              fontSize: '1.5em',
+              color: '#363',
+              paddingBottom: 6,
+              letterSpacing: -0.5,
+            }}
+          >
+            {category.name}
+          </div>
           <SubCategories categories={category.subCategories} />
         </div>
       ))}
@@ -139,9 +156,33 @@ function AllCategories({categories}: {categories: Category[]}) {
 
 function SubCategories({categories}: {categories: Category[]}) {
   return (
-    <div>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, 62px)',
+        gridTemplateRows: 'repeat(auto-fill, 114px)',
+        gap: 10,
+        paddingBottom: 12,
+      }}
+    >
       {categories.map((category) => (
-        <div key={category.collectionHandle}>{category.name}</div>
+        <div
+          key={category.categoryMetafieldId}
+          style={{
+            display: 'grid',
+            fontSize: 10.5,
+            gridTemplateRows: '62px 1fr',
+            width: '100%',
+          }}
+        >
+          {category.image && (
+            <Image data={category.image} width={62} height={62} />
+          )}
+          {
+            // the category name is in the format "Category > SubCategory"
+            category.name?.split('>')[1]
+          }
+        </div>
       ))}
     </div>
   );
@@ -265,48 +306,59 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 ` as const;
 
 const CATEGORIES_METAOBJECT_QUERY = `#graphql
-query CategoriesMetaobject {
-  categories: metaobject(
-    handle: {handle: "hardware", type: "category_metaobject"}
-  ) {
-    childCategories: field(key: "children_categories") {
+  fragment CategoryBasicFields on Metaobject {
+    name: field(key: "name") {
+      value
+    }
+    image: field(key: "image") {
+      reference {
+        ... on MediaImage {
+          image {
+            id
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+    }
+    categoryMetafieldId: id
+    collection: field(key: "collection") {
+      reference {
+        ... on Collection {
+          collectionHandle: handle
+        }
+      }
+    }
+  }
+
+  fragment CategoryFields on Metaobject {
+    ...CategoryBasicFields
+    subCategories: field(key: "children_categories") {
       references(first: 250) {
         nodes {
           ... on Metaobject {
-            name: field(key: "name") {
-              value
-            }
-            categoryMetafieldId: id
-            collection: field(key: "collection") {
-              reference {
-                ... on Collection {
-                  collectionHandle: handle
-                }
-              }
-            }
-            subCategories: field(key: "children_categories") {
-              references(first: 250) {
-                nodes {
-                  ... on Metaobject {
-                    name: field(key: "name") {
-                      value
-                    }
-                    categoryMetafieldId: id
-                    collection: field(key: "collection") {
-                      reference {
-                        ... on Collection {
-                          collectionHandle: handle
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+            ...CategoryBasicFields
+          }
+        }
+      }
+    }
+  }
+
+  query CategoriesMetaobject {
+    categories: metaobject(
+      handle: {handle: "hardware", type: "category_metaobject"}
+    ) {
+      childCategories: field(key: "children_categories") {
+        references(first: 250) {
+          nodes {
+            ... on Metaobject {
+              ...CategoryFields
             }
           }
         }
       }
     }
   }
-}
 ` as const;
