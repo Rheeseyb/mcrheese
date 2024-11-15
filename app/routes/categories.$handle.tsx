@@ -1,18 +1,19 @@
+import {CategoryAndSubCategories} from '../components/CategoryAndSubCategories';
+import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
+
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+import {useLoaderData, Link, type MetaFunction, Await} from '@remix-run/react';
 import {
   getPaginationVariables,
   Image,
   Money,
   Analytics,
+  Storefront,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-};
+import {Suspense} from 'react';
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -34,31 +35,62 @@ async function loadCriticalData({
   request,
 }: LoaderFunctionArgs) {
   const {handle} = params;
-  const {storefront} = context;
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
-  });
 
   if (!handle) {
     throw redirect('/collections');
   }
 
-  const [{collection}] = await Promise.all([
-    storefront.query(COLLECTION_QUERY, {
-      variables: {handle, ...paginationVariables},
-      // Add other queries here, so that they are loaded in parallel
+  const [{category}] = await Promise.all([
+    context.storefront.query(CATEGORIES_METAOBJECT_QUERY, {
+      variables: {
+        handle: handle!,
+      },
     }),
   ]);
 
-  if (!collection) {
-    throw new Response(`Collection ${handle} not found`, {
+  if (!category) {
+    throw new Response(`Category ${handle} not found`, {
       status: 404,
     });
   }
 
+  const processedCategory = processCategory(category);
+
   return {
-    collection,
+    rootCategory: processedCategory,
+    collectionPromise: loadCollection(
+      processedCategory.collectionHandle!,
+      context.storefront,
+      request,
+    ),
   };
+}
+
+function loadCollection(
+  collectionHandle: string,
+  storefront: Storefront,
+  request: Request,
+) {
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: 250,
+  });
+
+  if (!collectionHandle) {
+    throw redirect('/');
+  }
+
+  const collection = storefront.query(COLLECTION_QUERY, {
+    variables: {handle: collectionHandle, ...paginationVariables},
+    // Add other queries here, so that they are loaded in parallel
+  });
+
+  if (!collection) {
+    throw new Response(`Collection ${collectionHandle} not found`, {
+      status: 404,
+    });
+  }
+
+  return collection;
 }
 
 /**
@@ -66,38 +98,64 @@ async function loadCriticalData({
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context, params, request}: LoaderFunctionArgs) {
   return {};
 }
 
-export default function Collection() {
-  const {collection} = useLoaderData<typeof loader>();
+export default function Category() {
+  const data = useLoaderData<typeof loader>();
+  return (
+    <div>
+      <CategoryAndSubCategories category={data.rootCategory} />
+      <Collection />
+    </div>
+  );
+}
+
+export const meta: MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `McHydrogen | ${data?.rootCategory.name ?? ''} Category`}];
+};
+
+function Collection() {
+  const {collectionPromise} = useLoaderData<typeof loader>();
 
   return (
-    <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <PaginatedResourceSection
-        connection={collection.products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
-      <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
+    <Suspense>
+      <Await resolve={collectionPromise}>
+        {({collection}) => {
+          if (!collection) {
+            return null;
+          }
+
+          return (
+            <div className="collection">
+              <h1>{collection.title}</h1>
+              <p className="collection-description">{collection.description}</p>
+              <PaginatedResourceSection
+                connection={collection.products}
+                resourcesClassName="products-grid"
+              >
+                {({node: product, index}) => (
+                  <ProductItem
+                    key={product.id}
+                    product={product}
+                    loading={index < 8 ? 'eager' : undefined}
+                  />
+                )}
+              </PaginatedResourceSection>
+              <Analytics.CollectionView
+                data={{
+                  collection: {
+                    id: collection.id,
+                    handle: collection.handle,
+                  },
+                }}
+              />
+            </div>
+          );
         }}
-      />
-    </div>
+      </Await>
+    </Suspense>
   );
 }
 
@@ -120,10 +178,10 @@ function ProductItem({
       {product.featuredImage && (
         <Image
           alt={product.featuredImage.altText || product.title}
-          aspectRatio="1/1"
           data={product.featuredImage}
           loading={loading}
-          sizes="(min-width: 45em) 400px, 100vw"
+          width={100}
+          height={100}
         />
       )}
       <h4>{product.title}</h4>
