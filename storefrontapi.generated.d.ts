@@ -404,16 +404,34 @@ export type CategoriesMetaobjectQuery = {
   categories?: StorefrontAPI.Maybe<{
     childCategories?: StorefrontAPI.Maybe<{
       references?: StorefrontAPI.Maybe<{
-        nodes: Array<{
-          name?: StorefrontAPI.Maybe<
-            Pick<StorefrontAPI.MetaobjectField, 'value'>
-          >;
-          collection?: StorefrontAPI.Maybe<{
-            reference?: StorefrontAPI.Maybe<
-              Pick<StorefrontAPI.Collection, 'handle'>
+        nodes: Array<
+          {categoryMetafieldId: StorefrontAPI.Metaobject['id']} & {
+            name?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.MetaobjectField, 'value'>
             >;
-          }>;
-        }>;
+            collection?: StorefrontAPI.Maybe<{
+              reference?: StorefrontAPI.Maybe<{
+                collectionHandle: StorefrontAPI.Collection['handle'];
+              }>;
+            }>;
+            subCategories?: StorefrontAPI.Maybe<{
+              references?: StorefrontAPI.Maybe<{
+                nodes: Array<
+                  {categoryMetafieldId: StorefrontAPI.Metaobject['id']} & {
+                    name?: StorefrontAPI.Maybe<
+                      Pick<StorefrontAPI.MetaobjectField, 'value'>
+                    >;
+                    collection?: StorefrontAPI.Maybe<{
+                      reference?: StorefrontAPI.Maybe<{
+                        collectionHandle: StorefrontAPI.Collection['handle'];
+                      }>;
+                    }>;
+                  }
+                >;
+              }>;
+            }>;
+          }
+        >;
       }>;
     }>;
   }>;
@@ -1247,7 +1265,7 @@ interface GeneratedQueryTypes {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
   };
-  '#graphql\nquery CategoriesMetaobject {\n  categories: metaobject(\n    handle: {handle: "hardware", type: "category_metaobject"}\n  ) {\n    childCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            name: field(key: "name") {\n              value\n            }\n            collection: field(key: "collection") {\n              reference {\n                ... on Collection {\n                  handle\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
+  '#graphql\nquery CategoriesMetaobject {\n  categories: metaobject(\n    handle: {handle: "hardware", type: "category_metaobject"}\n  ) {\n    childCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            name: field(key: "name") {\n              value\n            }\n            categoryMetafieldId: id\n            collection: field(key: "collection") {\n              reference {\n                ... on Collection {\n                  collectionHandle: handle\n                }\n              }\n            }\n            subCategories: field(key: "children_categories") {\n              references(first: 250) {\n                nodes {\n                  ... on Metaobject {\n                    name: field(key: "name") {\n                      value\n                    }\n                    categoryMetafieldId: id\n                    collection: field(key: "collection") {\n                      reference {\n                        ... on Collection {\n                          collectionHandle: handle\n                        }\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
     return: CategoriesMetaobjectQuery;
     variables: CategoriesMetaobjectQueryVariables;
   };

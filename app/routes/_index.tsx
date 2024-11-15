@@ -3,6 +3,7 @@ import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
 import type {
+  CategoriesMetaobjectQuery,
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
@@ -21,6 +22,19 @@ export async function loader(args: LoaderFunctionArgs) {
   return defer({...deferredData, ...criticalData});
 }
 
+type Category = {
+  name: string | null;
+  categoryMetafieldId: string;
+  subCategories: Category[];
+  collectionHandle: string | null;
+};
+
+type CategoryNode = NonNullable<
+  NonNullable<
+    NonNullable<CategoriesMetaobjectQuery['categories']>['childCategories']
+  >['references']
+>['nodes'][number];
+
 /**
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
@@ -32,12 +46,20 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
+  function processCategory(category: CategoryNode): Category {
+    return {
+      name: category.name?.value ?? null,
+      categoryMetafieldId: category.categoryMetafieldId,
+      subCategories:
+        category.subCategories?.references?.nodes.map(processCategory) ?? [],
+      collectionHandle:
+        category.collection?.reference?.collectionHandle ?? null,
+    };
+  }
+
   const childCategories = (
     categories?.childCategories?.references?.nodes ?? []
-  ).map((category) => ({
-    name: category.name?.value ?? null,
-    collectionHandle: category.collection?.reference?.handle ?? null,
-  }));
+  ).map((c) => processCategory(c));
 
   return {
     featuredCollection: collections.nodes[0],
@@ -86,20 +108,38 @@ export default function Homepage() {
         <NavigationSidebar categories={data.categories} />
       </div>
       <div style={{gridColumn: 'content'}}>
-        <FeaturedCollection collection={data.featuredCollection} />
-        <RecommendedProducts products={data.recommendedProducts} />
+        <AllCategories categories={data.categories} />
       </div>
     </div>
   );
 }
 
-function NavigationSidebar({
-  categories,
-}: {
-  categories: {name: string | null; collectionHandle: string | null}[];
-}) {
+function NavigationSidebar({categories}: {categories: Category[]}) {
   return (
     <div style={{}}>
+      {categories.map((category) => (
+        <div key={category.collectionHandle}>{category.name}</div>
+      ))}
+    </div>
+  );
+}
+
+function AllCategories({categories}: {categories: Category[]}) {
+  return (
+    <div>
+      {categories.map((category) => (
+        <div key={category.collectionHandle}>
+          <div>{category.name}</div>
+          <SubCategories categories={category.subCategories} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SubCategories({categories}: {categories: Category[]}) {
+  return (
+    <div>
       {categories.map((category) => (
         <div key={category.collectionHandle}>{category.name}</div>
       ))}
@@ -236,10 +276,30 @@ query CategoriesMetaobject {
             name: field(key: "name") {
               value
             }
+            categoryMetafieldId: id
             collection: field(key: "collection") {
               reference {
                 ... on Collection {
-                  handle
+                  collectionHandle: handle
+                }
+              }
+            }
+            subCategories: field(key: "children_categories") {
+              references(first: 250) {
+                nodes {
+                  ... on Metaobject {
+                    name: field(key: "name") {
+                      value
+                    }
+                    categoryMetafieldId: id
+                    collection: field(key: "collection") {
+                      reference {
+                        ... on Collection {
+                          collectionHandle: handle
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
