@@ -72,7 +72,7 @@ function loadCollection(
   request: Request,
 ) {
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: 250,
   });
 
   if (!collectionHandle) {
