@@ -1,17 +1,10 @@
+import {type MetaFunction, useLoaderData} from '@remix-run/react';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
-import {Suspense} from 'react';
-import {Image, Money} from '@shopify/hydrogen';
-import type {
-  CategoriesMetaobjectQuery,
-  FeaturedCollectionFragment,
-  RecommendedProductsQuery,
-} from 'storefrontapi.generated';
-import type {Image as ImageType} from '@shopify/hydrogen/storefront-api-types';
+import {CategoryAndSubCategories} from '~/components/CategoryAndSubCategories';
 import {
+  CATEGORIES_METAOBJECT_QUERY,
   type Category,
   processCategory,
-  CATEGORIES_METAOBJECT_QUERY,
 } from '~/lib/categories';
 
 export const meta: MetaFunction = () => {
@@ -97,54 +90,10 @@ function AllCategories({categories}: {categories: Category[]}) {
   return (
     <div>
       {categories.map((category) => (
-        <div key={category.collectionHandle}>
-          <div
-            style={{
-              fontSize: '1.5em',
-              color: '#363',
-              paddingBottom: 6,
-              letterSpacing: -0.5,
-            }}
-          >
-            {category.name}
-          </div>
-          <SubCategories categories={category.subCategories} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SubCategories({categories}: {categories: Category[]}) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, 62px)',
-        gridTemplateRows: 'repeat(auto-fill, 114px)',
-        gap: 10,
-        paddingBottom: 12,
-      }}
-    >
-      {categories.map((category) => (
-        <Link
-          key={category.categoryMetafieldId}
-          to={`/categories/${category.metaobjectHandle}`}
-          style={{
-            display: 'grid',
-            fontSize: 10.5,
-            gridTemplateRows: '62px 1fr',
-            width: '100%',
-          }}
-        >
-          {category.image && (
-            <Image data={category.image} width={62} height={62} />
-          )}
-          {
-            // the category name is in the format "Category > SubCategory"
-            category.name?.split('>')[1]
-          }
-        </Link>
+        <CategoryAndSubCategories
+          key={category.metaobjectHandle}
+          category={category}
+        />
       ))}
     </div>
   );

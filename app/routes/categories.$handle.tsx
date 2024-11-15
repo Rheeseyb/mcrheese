@@ -1,6 +1,7 @@
-import {useParams} from '@remix-run/react';
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {CATEGORIES_METAOBJECT_QUERY} from '../lib/categories';
+import {useLoaderData} from '@remix-run/react';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {CategoryAndSubCategories} from '../components/CategoryAndSubCategories';
+import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
 
 export async function loader({context, params}: LoaderFunctionArgs) {
   const {handle} = params;
@@ -18,10 +19,14 @@ export async function loader({context, params}: LoaderFunctionArgs) {
     throw new Response('Category not found', {status: 404});
   }
 
-  return null;
+  return {rootCategory: processCategory(category)};
 }
 
 export default function Category() {
-  const {handle} = useParams();
-  return <div>Category {handle}</div>;
+  const data = useLoaderData<typeof loader>();
+  return (
+    <div>
+      <CategoryAndSubCategories category={data.rootCategory} />
+    </div>
+  );
 }
