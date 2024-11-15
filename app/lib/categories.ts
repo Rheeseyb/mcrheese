@@ -75,9 +75,9 @@ export const CATEGORIES_METAOBJECT_QUERY = `#graphql
     }
   }
 
-  query CategoriesMetaobject {
+  query CategoriesMetaobject($handle: String!) {
     categories: metaobject(
-      handle: {handle: "hardware", type: "category_metaobject"}
+      handle: {handle: $handle, type: "category_metaobject"}
     ) {
       childCategories: field(key: "children_categories") {
         references(first: 250) {

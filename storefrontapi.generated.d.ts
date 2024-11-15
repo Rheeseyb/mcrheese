@@ -71,7 +71,7 @@ export type CategoryFieldsFragment = {
 };
 
 export type CategoriesMetaobjectQueryVariables = StorefrontAPI.Exact<{
-  [key: string]: never;
+  handle: StorefrontAPI.Scalars['String']['input'];
 }>;
 
 export type CategoriesMetaobjectQuery = {
@@ -1334,7 +1334,7 @@ export type PredictiveSearchQuery = {
 };
 
 interface GeneratedQueryTypes {
-  '#graphql\n  fragment CategoryBasicFields on Metaobject {\n    name: field(key: "name") {\n      value\n    }\n    image: field(key: "image") {\n      reference {\n        ... on MediaImage {\n          image {\n            id\n            url\n            altText\n            width\n            height\n          }\n        }\n      }\n    }\n    categoryMetafieldId: id\n    metaobjectHandle: handle\n    collection: field(key: "collection") {\n      reference {\n        ... on Collection {\n          collectionHandle: handle\n        }\n      }\n    }\n  }\n\n  fragment CategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...CategoryBasicFields\n          }\n        }\n      }\n    }\n  }\n\n  query CategoriesMetaobject {\n    categories: metaobject(\n      handle: {handle: "hardware", type: "category_metaobject"}\n    ) {\n      childCategories: field(key: "children_categories") {\n        references(first: 250) {\n          nodes {\n            ... on Metaobject {\n              ...CategoryFields\n            }\n          }\n        }\n      }\n    }\n  }\n': {
+  '#graphql\n  fragment CategoryBasicFields on Metaobject {\n    name: field(key: "name") {\n      value\n    }\n    image: field(key: "image") {\n      reference {\n        ... on MediaImage {\n          image {\n            id\n            url\n            altText\n            width\n            height\n          }\n        }\n      }\n    }\n    categoryMetafieldId: id\n    metaobjectHandle: handle\n    collection: field(key: "collection") {\n      reference {\n        ... on Collection {\n          collectionHandle: handle\n        }\n      }\n    }\n  }\n\n  fragment CategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...CategoryBasicFields\n          }\n        }\n      }\n    }\n  }\n\n  query CategoriesMetaobject($handle: String!) {\n    categories: metaobject(\n      handle: {handle: $handle, type: "category_metaobject"}\n    ) {\n      childCategories: field(key: "children_categories") {\n        references(first: 250) {\n          nodes {\n            ... on Metaobject {\n              ...CategoryFields\n            }\n          }\n        }\n      }\n    }\n  }\n': {
     return: CategoriesMetaobjectQuery;
     variables: CategoriesMetaobjectQueryVariables;
   };

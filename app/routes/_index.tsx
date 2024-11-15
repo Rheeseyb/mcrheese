@@ -35,7 +35,11 @@ export async function loader(args: LoaderFunctionArgs) {
 async function loadCriticalData({context}: LoaderFunctionArgs) {
   const [{collections}, {categories}] = await Promise.all([
     context.storefront.query(FEATURED_COLLECTION_QUERY),
-    context.storefront.query(CATEGORIES_METAOBJECT_QUERY),
+    context.storefront.query(CATEGORIES_METAOBJECT_QUERY, {
+      variables: {
+        handle: 'hardware', // this is the root category from which all categories are fetched
+      },
+    }),
     // Add other queries here, so that they are loaded in parallel
   ]);
 
