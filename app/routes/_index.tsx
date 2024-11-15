@@ -87,7 +87,7 @@ export default function Homepage() {
 function NavigationSidebar({
   categories,
 }: {
-  categories: {name: string; collectionHandle: string}[];
+  categories: {name: string | null; collectionHandle: string | null}[];
 }) {
   return (
     <div>
