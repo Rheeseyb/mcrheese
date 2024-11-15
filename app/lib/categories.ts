@@ -17,7 +17,7 @@ export type Category = {
 
 type CategoryNode = NonNullable<
   NonNullable<
-    NonNullable<CategoriesMetaobjectQuery['categories']>['childCategories']
+    NonNullable<CategoriesMetaobjectQuery['category']>['subCategories']
   >['references']
 >['nodes'][number];
 
@@ -62,7 +62,7 @@ export const CATEGORIES_METAOBJECT_QUERY = `#graphql
     }
   }
 
-  fragment CategoryFields on Metaobject {
+  fragment SubCategoryFields on Metaobject {
     ...CategoryBasicFields
     subCategories: field(key: "children_categories") {
       references(first: 250) {
@@ -74,20 +74,25 @@ export const CATEGORIES_METAOBJECT_QUERY = `#graphql
       }
     }
   }
-
-  query CategoriesMetaobject($handle: String!) {
-    categories: metaobject(
-      handle: {handle: $handle, type: "category_metaobject"}
-    ) {
-      childCategories: field(key: "children_categories") {
-        references(first: 250) {
-          nodes {
-            ... on Metaobject {
-              ...CategoryFields
-            }
+  
+  fragment TopCategoryFields on Metaobject {
+    ...CategoryBasicFields
+    subCategories: field(key: "children_categories") {
+      references(first: 250) {
+        nodes {
+          ... on Metaobject {
+            ...SubCategoryFields
           }
         }
       }
+    }
+  }
+
+  query CategoriesMetaobject($handle: String!) {
+    category: metaobject(
+      handle: {handle: $handle, type: "category_metaobject"}
+    ) {
+      ...TopCategoryFields
     }
   }
 ` as const;

@@ -33,7 +33,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context}: LoaderFunctionArgs) {
-  const [{collections}, {categories}] = await Promise.all([
+  const [{collections}, {category}] = await Promise.all([
     context.storefront.query(FEATURED_COLLECTION_QUERY),
     context.storefront.query(CATEGORIES_METAOBJECT_QUERY, {
       variables: {
@@ -43,9 +43,13 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  const childCategories = (
-    categories?.childCategories?.references?.nodes ?? []
-  ).map((c) => processCategory(c));
+  if (category == null) {
+    throw new Response('Root Category not found', {status: 404});
+  }
+
+  const rootCategory = processCategory(category);
+
+  const childCategories = rootCategory.subCategories;
 
   return {
     featuredCollection: collections.nodes[0],
