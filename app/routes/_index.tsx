@@ -140,8 +140,9 @@ function SubCategories({categories}: {categories: Category[]}) {
       }}
     >
       {categories.map((category) => (
-        <div
+        <Link
           key={category.categoryMetafieldId}
+          to={`/categories/${category.metaobjectHandle}`}
           style={{
             display: 'grid',
             fontSize: 10.5,
@@ -156,7 +157,7 @@ function SubCategories({categories}: {categories: Category[]}) {
             // the category name is in the format "Category > SubCategory"
             category.name?.split('>')[1]
           }
-        </div>
+        </Link>
       ))}
     </div>
   );
