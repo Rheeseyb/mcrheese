@@ -14,6 +14,7 @@ import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {Suspense} from 'react';
+import {NavigationSidebar} from '../components/NavigationSidebar';
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -40,15 +41,20 @@ async function loadCriticalData({
     throw redirect('/collections');
   }
 
-  const [{category}] = await Promise.all([
+  const [{category}, {category: rootCategory}] = await Promise.all([
     context.storefront.query(CATEGORIES_METAOBJECT_QUERY, {
       variables: {
         handle: handle!,
       },
     }),
+    context.storefront.query(CATEGORIES_METAOBJECT_QUERY, {
+      variables: {
+        handle: 'hardware',
+      },
+    }),
   ]);
 
-  if (!category) {
+  if (!category || !rootCategory) {
     throw new Response(`Category ${handle} not found`, {
       status: 404,
     });
@@ -57,7 +63,8 @@ async function loadCriticalData({
   const processedCategory = processCategory(category);
 
   return {
-    rootCategory: processedCategory,
+    selectedCategory: processedCategory,
+    topLevelCategories: processCategory(rootCategory).subCategories,
     collectionPromise: loadCollection(
       processedCategory.collectionHandle!,
       context.storefront,
@@ -105,15 +112,27 @@ function loadDeferredData({context, params, request}: LoaderFunctionArgs) {
 export default function Category() {
   const data = useLoaderData<typeof loader>();
   return (
-    <div>
-      <CategoryAndSubCategories category={data.rootCategory} />
-      <Collection />
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '[navigation] 200px [content] 1fr',
+      }}
+    >
+      <div style={{gridColumn: 'navigation'}}>
+        <NavigationSidebar categories={data.topLevelCategories} />
+      </div>
+      <div style={{gridColumn: 'content'}}>
+        <CategoryAndSubCategories category={data.selectedCategory} />
+        <Collection />
+      </div>
     </div>
   );
 }
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return [{title: `McHydrogen | ${data?.rootCategory.name ?? ''} Category`}];
+  return [
+    {title: `McHydrogen | ${data?.selectedCategory.name ?? ''} Category`},
+  ];
 };
 
 function Collection() {

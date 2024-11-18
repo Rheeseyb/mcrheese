@@ -6,6 +6,7 @@ import {
   type Category,
   processCategory,
 } from '~/lib/categories';
+import {NavigationSidebar} from '../components/NavigationSidebar';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
@@ -44,7 +45,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
   const childCategories = rootCategory.subCategories;
 
   return {
-    categories: childCategories,
+    topLevelCategories: childCategories,
   };
 }
 
@@ -67,21 +68,11 @@ export default function Homepage() {
       }}
     >
       <div style={{gridColumn: 'navigation'}}>
-        <NavigationSidebar categories={data.categories} />
+        <NavigationSidebar categories={data.topLevelCategories} />
       </div>
       <div style={{gridColumn: 'content'}}>
-        <AllCategories categories={data.categories} />
+        <AllCategories categories={data.topLevelCategories} />
       </div>
-    </div>
-  );
-}
-
-function NavigationSidebar({categories}: {categories: Category[]}) {
-  return (
-    <div style={{fontSize: 11}}>
-      {categories.map((category) => (
-        <div key={category.collectionHandle}>{category.name}</div>
-      ))}
     </div>
   );
 }
