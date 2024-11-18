@@ -1,6 +1,6 @@
 import {type MetaFunction, useLoaderData} from '@remix-run/react';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {CategoryAndSubCategories} from '~/components/CategoryAndSubCategories';
+import {CategoryAndSubCategoriesLandingPageStyle} from '~/components/CategoryAndSubCategories';
 import {
   CATEGORIES_METAOBJECT_QUERY,
   type Category,
@@ -81,7 +81,7 @@ function AllCategories({categories}: {categories: Category[]}) {
   return (
     <div>
       {categories.map((category) => (
-        <CategoryAndSubCategories
+        <CategoryAndSubCategoriesLandingPageStyle
           key={category.metaobjectHandle}
           category={category}
         />

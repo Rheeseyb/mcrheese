@@ -8,6 +8,7 @@ export type CategoryImage = Pick<
 
 export type Category = {
   name: string | null;
+  description: string;
   categoryMetafieldId: string;
   subCategories: Category[];
   collectionHandle: string | null;
@@ -24,6 +25,7 @@ type CategoryNode = NonNullable<
 export function processCategory(category: CategoryNode): Category {
   return {
     name: category.name?.value ?? null,
+    description: category.description?.value ?? '',
     categoryMetafieldId: category.categoryMetafieldId,
     metaobjectHandle: category.metaobjectHandle,
     image: category.image?.reference?.image ?? null,
@@ -36,6 +38,9 @@ export function processCategory(category: CategoryNode): Category {
 export const CATEGORIES_METAOBJECT_QUERY = `#graphql
   fragment CategoryBasicFields on Metaobject {
     name: field(key: "name") {
+      value
+    }
+    description: field(key: "description") {
       value
     }
     image: field(key: "image") {

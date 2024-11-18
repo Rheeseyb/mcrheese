@@ -8,6 +8,9 @@ export type CategoryBasicFieldsFragment = {
   metaobjectHandle: StorefrontAPI.Metaobject['handle'];
 } & {
   name?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+  description?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.MetaobjectField, 'value'>
+  >;
   image?: StorefrontAPI.Maybe<{
     reference?: StorefrontAPI.Maybe<{
       image?: StorefrontAPI.Maybe<
@@ -36,6 +39,9 @@ export type SubCategoryFieldsFragment = {
           name?: StorefrontAPI.Maybe<
             Pick<StorefrontAPI.MetaobjectField, 'value'>
           >;
+          description?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.MetaobjectField, 'value'>
+          >;
           image?: StorefrontAPI.Maybe<{
             reference?: StorefrontAPI.Maybe<{
               image?: StorefrontAPI.Maybe<
@@ -56,6 +62,9 @@ export type SubCategoryFieldsFragment = {
     }>;
   }>;
   name?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+  description?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.MetaobjectField, 'value'>
+  >;
   image?: StorefrontAPI.Maybe<{
     reference?: StorefrontAPI.Maybe<{
       image?: StorefrontAPI.Maybe<
@@ -91,6 +100,9 @@ export type TopCategoryFieldsFragment = {
                   name?: StorefrontAPI.Maybe<
                     Pick<StorefrontAPI.MetaobjectField, 'value'>
                   >;
+                  description?: StorefrontAPI.Maybe<
+                    Pick<StorefrontAPI.MetaobjectField, 'value'>
+                  >;
                   image?: StorefrontAPI.Maybe<{
                     reference?: StorefrontAPI.Maybe<{
                       image?: StorefrontAPI.Maybe<
@@ -113,6 +125,9 @@ export type TopCategoryFieldsFragment = {
           name?: StorefrontAPI.Maybe<
             Pick<StorefrontAPI.MetaobjectField, 'value'>
           >;
+          description?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.MetaobjectField, 'value'>
+          >;
           image?: StorefrontAPI.Maybe<{
             reference?: StorefrontAPI.Maybe<{
               image?: StorefrontAPI.Maybe<
@@ -133,6 +148,9 @@ export type TopCategoryFieldsFragment = {
     }>;
   }>;
   name?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+  description?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.MetaobjectField, 'value'>
+  >;
   image?: StorefrontAPI.Maybe<{
     reference?: StorefrontAPI.Maybe<{
       image?: StorefrontAPI.Maybe<
@@ -174,6 +192,9 @@ export type CategoriesMetaobjectQuery = {
                       name?: StorefrontAPI.Maybe<
                         Pick<StorefrontAPI.MetaobjectField, 'value'>
                       >;
+                      description?: StorefrontAPI.Maybe<
+                        Pick<StorefrontAPI.MetaobjectField, 'value'>
+                      >;
                       image?: StorefrontAPI.Maybe<{
                         reference?: StorefrontAPI.Maybe<{
                           image?: StorefrontAPI.Maybe<
@@ -196,6 +217,9 @@ export type CategoriesMetaobjectQuery = {
               name?: StorefrontAPI.Maybe<
                 Pick<StorefrontAPI.MetaobjectField, 'value'>
               >;
+              description?: StorefrontAPI.Maybe<
+                Pick<StorefrontAPI.MetaobjectField, 'value'>
+              >;
               image?: StorefrontAPI.Maybe<{
                 reference?: StorefrontAPI.Maybe<{
                   image?: StorefrontAPI.Maybe<
@@ -216,6 +240,9 @@ export type CategoriesMetaobjectQuery = {
         }>;
       }>;
       name?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+      description?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.MetaobjectField, 'value'>
+      >;
       image?: StorefrontAPI.Maybe<{
         reference?: StorefrontAPI.Maybe<{
           image?: StorefrontAPI.Maybe<
@@ -1320,7 +1347,7 @@ export type PredictiveSearchQuery = {
 };
 
 interface GeneratedQueryTypes {
-  '#graphql\n  fragment CategoryBasicFields on Metaobject {\n    name: field(key: "name") {\n      value\n    }\n    image: field(key: "image") {\n      reference {\n        ... on MediaImage {\n          image {\n            id\n            url\n            altText\n            width\n            height\n          }\n        }\n      }\n    }\n    categoryMetafieldId: id\n    metaobjectHandle: handle\n    collection: field(key: "collection") {\n      reference {\n        ... on Collection {\n          collectionHandle: handle\n        }\n      }\n    }\n  }\n\n  fragment SubCategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...CategoryBasicFields\n          }\n        }\n      }\n    }\n  }\n  \n  fragment TopCategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...SubCategoryFields\n          }\n        }\n      }\n    }\n  }\n\n  query CategoriesMetaobject($handle: String!) {\n    category: metaobject(\n      handle: {handle: $handle, type: "category_metaobject"}\n    ) {\n      ...TopCategoryFields\n    }\n  }\n': {
+  '#graphql\n  fragment CategoryBasicFields on Metaobject {\n    name: field(key: "name") {\n      value\n    }\n    description: field(key: "description") {\n      value\n    }\n    image: field(key: "image") {\n      reference {\n        ... on MediaImage {\n          image {\n            id\n            url\n            altText\n            width\n            height\n          }\n        }\n      }\n    }\n    categoryMetafieldId: id\n    metaobjectHandle: handle\n    collection: field(key: "collection") {\n      reference {\n        ... on Collection {\n          collectionHandle: handle\n        }\n      }\n    }\n  }\n\n  fragment SubCategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...CategoryBasicFields\n          }\n        }\n      }\n    }\n  }\n  \n  fragment TopCategoryFields on Metaobject {\n    ...CategoryBasicFields\n    subCategories: field(key: "children_categories") {\n      references(first: 250) {\n        nodes {\n          ... on Metaobject {\n            ...SubCategoryFields\n          }\n        }\n      }\n    }\n  }\n\n  query CategoriesMetaobject($handle: String!) {\n    category: metaobject(\n      handle: {handle: $handle, type: "category_metaobject"}\n    ) {\n      ...TopCategoryFields\n    }\n  }\n': {
     return: CategoriesMetaobjectQuery;
     variables: CategoriesMetaobjectQueryVariables;
   };

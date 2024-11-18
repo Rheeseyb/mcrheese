@@ -1,4 +1,4 @@
-import {CategoryAndSubCategories} from '../components/CategoryAndSubCategories';
+import {CategoryAndSubCategoriesDetailPageStyle} from '../components/CategoryAndSubCategories';
 import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
 
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -122,7 +122,9 @@ export default function Category() {
         <NavigationSidebar categories={data.topLevelCategories} />
       </div>
       <div style={{gridColumn: 'content'}}>
-        <CategoryAndSubCategories category={data.selectedCategory} />
+        <CategoryAndSubCategoriesDetailPageStyle
+          category={data.selectedCategory}
+        />
         <Collection />
       </div>
     </div>
