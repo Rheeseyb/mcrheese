@@ -1,19 +1,22 @@
 import {CategoryAndSubCategoriesDetailPageStyle} from '../components/CategoryAndSubCategories';
 import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
 
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction, Await} from '@remix-run/react';
+import {Await, Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import type {Storefront} from '@shopify/hydrogen';
 import {
+  Analytics,
   getPaginationVariables,
   Image,
   Money,
-  Analytics,
-  Storefront,
 } from '@shopify/hydrogen';
-import type {ProductItemFragment} from 'storefrontapi.generated';
-import {useVariantUrl} from '~/lib/variants';
-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
+import type {
+  CollectionQuery,
+  ProductItemFragment,
+} from 'storefrontapi.generated';
+import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {useVariantUrl} from '~/lib/variants';
 import {NavigationSidebar} from '../components/NavigationSidebar';
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -77,7 +80,7 @@ function loadCollection(
   collectionHandle: string,
   storefront: Storefront,
   request: Request,
-) {
+): Promise<CollectionQuery> {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 250,
   });
@@ -237,7 +240,10 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
         ...MoneyProductItem
       }
     }
-    variants(first: 1) {
+    options(first: 250) {
+      name
+    }
+    variants(first: 250) {
       nodes {
         selectedOptions {
           name
