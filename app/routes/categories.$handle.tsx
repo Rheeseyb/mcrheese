@@ -38,7 +38,7 @@ async function loadCriticalData({
   const {handle} = params;
 
   if (!handle) {
-    throw redirect('/collections');
+    throw redirect('/');
   }
 
   const [{category}, {category: rootCategory}] = await Promise.all([
