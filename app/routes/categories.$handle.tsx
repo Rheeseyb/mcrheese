@@ -83,7 +83,8 @@ function loadCollection(
   request: Request,
 ): Promise<CollectionQuery> {
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 250,
+    // BB NOTE: I want to limit the initial load to 10, but then the "Load more" should load 250.
+    pageBy: 10,
   });
 
   if (!collectionHandle) {
@@ -145,7 +146,8 @@ function Collection() {
   const {collectionPromise} = useLoaderData<typeof loader>();
 
   return (
-    <Suspense>
+    // BB NOTE: interestingly, by awaiting collectionPromise in the loader and forcing it to render on the server, the page load becomes faster.
+    <Suspense fallback={<div>Loading products...</div>}>
       <Await resolve={collectionPromise}>
         {({collection}) => {
           if (!collection) {
