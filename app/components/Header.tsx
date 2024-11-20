@@ -27,7 +27,7 @@ export function Header({
   return (
     <header className="header">
       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
+        <strong>McHydrogen</strong>
       </NavLink>
       <HeaderMenu
         menu={menu}
