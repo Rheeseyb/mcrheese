@@ -18,6 +18,7 @@ import type {
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {useVariantUrl} from '~/lib/variants';
 import {NavigationSidebar} from '../components/NavigationSidebar';
+import {AddToCartButton} from '../components/AddToCartButton';
 
 export async function loader(args: LoaderFunctionArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -155,18 +156,17 @@ function Collection() {
             <div className="collection">
               <h1>{collection.title}</h1>
               <p className="collection-description">{collection.description}</p>
-              <PaginatedResourceSection
-                connection={collection.products}
-                resourcesClassName="products-grid"
-              >
-                {({node: product, index}) => (
-                  <ProductItem
-                    key={product.id}
-                    product={product}
-                    loading={index < 8 ? 'eager' : undefined}
-                  />
-                )}
-              </PaginatedResourceSection>
+              <div>
+                <PaginatedResourceSection connection={collection.products}>
+                  {({node: product, index}) => (
+                    <ProductItem
+                      key={product.id}
+                      product={product}
+                      loading={index < 8 ? 'eager' : undefined}
+                    />
+                  )}
+                </PaginatedResourceSection>
+              </div>
               <Analytics.CollectionView
                 data={{
                   collection: {
@@ -193,26 +193,70 @@ function ProductItem({
   const variant = product.variants.nodes[0];
   const variantUrl = useVariantUrl(product.handle, variant.selectedOptions);
   return (
-    <Link
-      className="product-item"
-      key={product.id}
-      prefetch="intent"
-      to={variantUrl}
-    >
-      {product.featuredImage && (
-        <Image
-          alt={product.featuredImage.altText || product.title}
-          data={product.featuredImage}
-          loading={loading}
-          width={100}
-          height={100}
-        />
-      )}
-      <h4>{product.title}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
-      </small>
-    </Link>
+    <div>
+      <Link key={product.id} prefetch="intent" to={variantUrl}>
+        <h4>{product.title}</h4>
+      </Link>
+      <div
+        style={{fontSize: '0.75rem'}}
+        dangerouslySetInnerHTML={{__html: product.descriptionHtml}}
+      />
+      <div style={{display: 'flex', flexDirection: 'row'}}>
+        {product.featuredImage && (
+          <Image
+            alt={product.featuredImage.altText || product.title}
+            data={product.featuredImage}
+            loading={loading}
+            width={88}
+          />
+        )}
+        <table>
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>{product.options[0].name}</th>
+              {product.options[1] && <th>{product.options[1].name}</th>}
+              <th>Model</th>
+              <th>Net Weight</th>
+              <th>Each</th>
+              <th>Buy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {product.variants.nodes.map((variant) => (
+              <tr key={variant.id}>
+                <td>{variant.sku}</td>
+                <td>{variant.selectedOptions[0].value}</td>
+                {product.options[1] && (
+                  <td>{variant.selectedOptions[1].value}</td>
+                )}
+                <td>{variant.title}</td>
+                <td>{variant.weight}</td>
+                <td>
+                  <Money data={variant.price} />
+                </td>
+                <td>
+                  <AddToCartButton
+                    onClick={() => {
+                      open('cart');
+                    }}
+                    lines={[
+                      {
+                        merchandiseId: variant.id,
+                        quantity: 1,
+                        selectedVariant: variant,
+                      },
+                    ]}
+                  >
+                    Add to cart
+                  </AddToCartButton>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -225,6 +269,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     id
     handle
     title
+    descriptionHtml
     featuredImage {
       id
       altText
@@ -245,9 +290,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     }
     variants(first: 250) {
       nodes {
+        id
+        sku
         selectedOptions {
           name
           value
+        }
+        title
+        weight
+        price {
+          ...MoneyProductItem
         }
       }
     }

@@ -111,6 +111,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     id
     handle
     title
+    descriptionHtml
     featuredImage {
       id
       altText
@@ -131,9 +132,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     }
     variants(first: 250) {
       nodes {
+        id
+        sku
         selectedOptions {
           name
           value
+        }
+        title
+        weight
+        price {
+          ...MoneyProductItem
         }
       }
     }

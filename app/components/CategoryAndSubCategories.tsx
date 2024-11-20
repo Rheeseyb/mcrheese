@@ -96,7 +96,12 @@ export function CategoryAndSubCategoriesDetailPageStyle({
             }}
           >
             {category.image && (
-              <Image data={category.image} width={100} height={100} />
+              <Image
+                loading="eager"
+                data={category.image}
+                width={100}
+                height={100}
+              />
             )}
             <div
               style={{display: 'flex', gap: '0.5rem', flexDirection: 'column'}}
