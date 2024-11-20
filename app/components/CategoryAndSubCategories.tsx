@@ -43,7 +43,12 @@ export function CategoryAndSubCategoriesLandingPageStyle({
             }}
           >
             {category.image && (
-              <Image data={category.image} width={62} height={62} />
+              <Image
+                loading="eager"
+                data={category.image}
+                width={62}
+                height={62}
+              />
             )}
             {category.name?.split('>').at(-1)}
           </Link>

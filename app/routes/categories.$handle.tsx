@@ -206,6 +206,7 @@ function ProductItem({
           <Image
             alt={product.featuredImage.altText || product.title}
             data={product.featuredImage}
+            decoding={loading === 'eager' ? 'sync' : 'async'}
             loading={loading}
             width={88}
           />
