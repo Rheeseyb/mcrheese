@@ -11,6 +11,7 @@ export function CategoryAndSubCategoriesLandingPageStyle({
     <div key={category.collectionHandle}>
       <Link
         to={`/categories/${category.metaobjectHandle}`}
+        prefetch="intent"
         style={{
           fontSize: '1.5em',
           color: '#363',
@@ -32,6 +33,7 @@ export function CategoryAndSubCategoriesLandingPageStyle({
         {category.subCategories.map((category) => (
           <Link
             key={category.categoryMetafieldId}
+            prefetch="intent"
             to={`/categories/${category.metaobjectHandle}`}
             style={{
               display: 'grid',
@@ -60,6 +62,7 @@ export function CategoryAndSubCategoriesDetailPageStyle({
     <div key={category.collectionHandle}>
       <Link
         to={`/categories/${category.metaobjectHandle}`}
+        prefetch="intent"
         style={{
           fontSize: '1.5em',
           color: '#363',
@@ -80,6 +83,7 @@ export function CategoryAndSubCategoriesDetailPageStyle({
         {category.subCategories.map((category) => (
           <Link
             key={category.categoryMetafieldId}
+            prefetch="intent"
             to={`/categories/${category.metaobjectHandle}`}
             style={{
               display: 'grid',
