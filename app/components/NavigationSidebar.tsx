@@ -12,6 +12,7 @@ export function NavigationSidebar({categories}: {categories: Category[]}) {
           key={category.collectionHandle}
           prefetch="viewport"
           to={`/categories/${category.metaobjectHandle}`}
+          // we navigate on onMouseDown to match McLiquid and NextFaster
           onMouseDown={(e) => {
             e.preventDefault();
             navigate(`/categories/${category.metaobjectHandle}`);
