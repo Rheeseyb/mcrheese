@@ -83,8 +83,8 @@ function loadCollection(
   request: Request,
 ): Promise<CollectionQuery> {
   const paginationVariables = getPaginationVariables(request, {
-    // BB NOTE: I want to limit the initial load to 10, but then the "Load more" should load 250.
-    pageBy: 10,
+    // BB NOTE: I want to limit the initial load to 50, but then the "Load more" should load 250.
+    pageBy: 50,
   });
 
   if (!collectionHandle) {
