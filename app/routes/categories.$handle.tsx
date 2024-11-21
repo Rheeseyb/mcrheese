@@ -159,7 +159,8 @@ function Collection() {
               <h1>{collection.title}</h1>
               <p className="collection-description">{collection.description}</p>
               <div>
-                <PaginatedResourceSection connection={collection.products}>
+                {/* BB NOTE: The PaginatedResourceSection is very slow to render */}
+                {/* <PaginatedResourceSection connection={collection.products}>
                   {({node: product, index}) => (
                     <ProductItem
                       key={product.id}
@@ -167,7 +168,14 @@ function Collection() {
                       loading={index < 8 ? 'eager' : undefined}
                     />
                   )}
-                </PaginatedResourceSection>
+                </PaginatedResourceSection> */}
+                {collection.products.nodes.map((product, index) => (
+                  <ProductItem
+                    key={product.id}
+                    product={product}
+                    loading={index < 8 ? 'eager' : undefined}
+                  />
+                ))}
               </div>
               <Analytics.CollectionView
                 data={{
@@ -239,10 +247,8 @@ function ProductItem({
                   <Money data={variant.price} />
                 </td>
                 <td>
-                  <AddToCartButton
-                    onClick={() => {
-                      open('cart');
-                    }}
+                  {/* BB NOTE:The AddToCartButton seems to have very bad performance */}
+                  {/* <AddToCartButton
                     lines={[
                       {
                         merchandiseId: variant.id,
@@ -252,7 +258,7 @@ function ProductItem({
                     ]}
                   >
                     Add to cart
-                  </AddToCartButton>
+                  </AddToCartButton> */}
                 </td>
               </tr>
             ))}

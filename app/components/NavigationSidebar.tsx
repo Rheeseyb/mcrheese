@@ -1,18 +1,28 @@
-import {NavLink} from '@remix-run/react';
+import {NavLink, useNavigation, useNavigate} from '@remix-run/react';
 import type {Category} from '../lib/categories';
 
 export function NavigationSidebar({categories}: {categories: Category[]}) {
+  const navigate = useNavigate();
+
   return (
     <div style={{fontSize: 11}}>
+      <PendingNavigation />
       {categories.map((category) => (
         <NavLink
           key={category.collectionHandle}
-          reloadDocument // BB Note: using reloadDocument is dramatically faster because the pages are massive and their hydration is very costly
-          prefetch="intent"
+          prefetch="viewport"
           to={`/categories/${category.metaobjectHandle}`}
-          style={({isActive}) => ({
+          onMouseDown={(e) => {
+            e.preventDefault();
+            navigate(`/categories/${category.metaobjectHandle}`);
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+          }}
+          style={({isActive, isPending}) => ({
             display: 'block',
             fontWeight: isActive ? 'bold' : 'normal',
+            textDecoration: isPending ? 'underline' : 'none',
           })}
         >
           {category.name}
@@ -20,4 +30,9 @@ export function NavigationSidebar({categories}: {categories: Category[]}) {
       ))}
     </div>
   );
+}
+
+function PendingNavigation() {
+  const navigation = useNavigation();
+  return navigation.state === 'loading' ? 'SPINNER' : '.';
 }
