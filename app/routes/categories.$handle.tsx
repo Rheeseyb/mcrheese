@@ -69,7 +69,7 @@ async function loadCriticalData({
   return {
     selectedCategory: processedCategory,
     topLevelCategories: processCategory(rootCategory).subCategories,
-    collectionPromise: loadCollection(
+    collectionPromise: await loadCollection(
       processedCategory.collectionHandle!,
       context.storefront,
       request,
