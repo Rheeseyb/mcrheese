@@ -69,6 +69,7 @@ async function loadCriticalData({
   return {
     selectedCategory: processedCategory,
     topLevelCategories: processCategory(rootCategory).subCategories,
+    // BB NOTE: making this awaited does not seem to significantly affect performance
     collectionPromise: await loadCollection(
       processedCategory.collectionHandle!,
       context.storefront,
