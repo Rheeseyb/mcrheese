@@ -1,4 +1,5 @@
-import {type FetcherWithComponents} from '@remix-run/react';
+import React from 'react';
+import {useFetcher, type FetcherWithComponents} from '@remix-run/react';
 import {CartForm, type OptimisticCartLineInput} from '@shopify/hydrogen';
 
 export function AddToCartButton({
@@ -14,24 +15,79 @@ export function AddToCartButton({
   lines: Array<OptimisticCartLineInput>;
   onClick?: () => void;
 }) {
+  const [inViewport, ref] = useDisplayInViewport<HTMLDivElement>();
+
   return (
-    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
-      {(fetcher: FetcherWithComponents<any>) => (
-        <>
+    <div ref={ref}>
+      {!inViewport && (
+        <form action="/cart" method="post">
           <input
-            name="analytics"
             type="hidden"
-            value={JSON.stringify(analytics)}
+            name={'cartFormInput'}
+            value={JSON.stringify({
+              action: CartForm.ACTIONS.LinesAdd,
+              inputs: {lines},
+            })}
           />
-          <button
-            type="submit"
-            onClick={onClick}
-            disabled={disabled ?? fetcher.state !== 'idle'}
-          >
+          <button type="submit" onClick={onClick}>
             {children}
           </button>
-        </>
+        </form>
       )}
-    </CartForm>
+      {inViewport && (
+        <CartForm
+          route="/cart"
+          inputs={{lines}}
+          action={CartForm.ACTIONS.LinesAdd}
+        >
+          {(fetcher: FetcherWithComponents<any>) => (
+            <>
+              <input
+                name="analytics"
+                type="hidden"
+                value={JSON.stringify(analytics)}
+              />
+              <button
+                type="submit"
+                onClick={onClick}
+                disabled={disabled ?? fetcher.state !== 'idle'}
+              >
+                {children}
+              </button>
+            </>
+          )}
+        </CartForm>
+      )}
+    </div>
   );
+}
+
+function useDisplayInViewport<T extends HTMLElement>(): [
+  boolean,
+  React.RefObject<T>,
+] {
+  const [inViewport, setInViewport] = React.useState(false);
+
+  const ref = React.useRef<T>(null);
+
+  // return [true, ref];
+
+  React.useEffect(() => {
+    const callback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        setInViewport((current) => current || entry.isIntersecting);
+      });
+    };
+    const observer = new IntersectionObserver(callback, {threshold: 0.5});
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return function cleanup() {
+      observer.disconnect();
+    };
+  }, []);
+
+  return [inViewport, ref];
 }
