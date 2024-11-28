@@ -248,7 +248,7 @@ function ProductItem({
                 </td>
                 <td>
                   {/* BB NOTE:The AddToCartButton seems to have very bad performance */}
-                  {/* <AddToCartButton
+                  <AddToCartButton
                     lines={[
                       {
                         merchandiseId: variant.id,
@@ -258,7 +258,7 @@ function ProductItem({
                     ]}
                   >
                     Add to cart
-                  </AddToCartButton> */}
+                  </AddToCartButton>
                 </td>
               </tr>
             ))}
