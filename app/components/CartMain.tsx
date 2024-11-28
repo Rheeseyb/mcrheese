@@ -34,9 +34,13 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
       <div className="cart-details">
         <div aria-labelledby="cart-lines">
           <ul>
-            {(cart?.lines?.nodes ?? []).map((line) => (
-              <CartLineItem key={line.id} line={line} layout={layout} />
-            ))}
+            {(cart?.lines?.nodes ?? []).map(
+              (line) =>
+                // BB NOTE: sometimes line.merchandise.product can be null and the site crashes
+                line.merchandise.product && (
+                  <CartLineItem key={line.id} line={line} layout={layout} />
+                ),
+            )}
           </ul>
         </div>
         {cartHasItems && <CartSummary cart={cart} layout={layout} />}
