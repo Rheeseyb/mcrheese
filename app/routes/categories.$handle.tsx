@@ -410,6 +410,59 @@ function ProductItem({
   );
 }
 
+function FilterOptions({
+  productOptions,
+  selectedFilters,
+  searchParams,
+  setSearchParams,
+}: {
+  productOptions: Record<string, string[]>;
+  selectedFilters: Record<string, string[]>;
+  searchParams: URLSearchParams;
+  setSearchParams: (params: URLSearchParams) => void;
+}) {
+  return (
+    <div style={{marginTop: '2rem', fontSize: 10.5}}>
+      <h3>Filter Options</h3>
+      {Object.entries(productOptions).map(([optionName, values]) => (
+        <div key={optionName} style={{marginBottom: '1rem'}}>
+          <h4 style={{marginBottom: '0.5rem'}}>{optionName}</h4>
+          {values.map((value) => (
+            <div key={value} style={{marginLeft: '0.5rem'}}>
+              <label>
+                <input
+                  type="checkbox"
+                  name={`${optionName}`}
+                  value={value}
+                  checked={selectedFilters[optionName]?.includes(value)}
+                  style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
+                  onChange={(e) => {
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    if (e.target.checked) {
+                      newSearchParams.append(e.target.name, e.target.value);
+                    } else {
+                      // Remove specific name-value pair
+                      const values = newSearchParams.getAll(e.target.name);
+                      newSearchParams.delete(e.target.name);
+                      values
+                        .filter((v) => v !== e.target.value)
+                        .forEach((v) =>
+                          newSearchParams.append(e.target.name, v),
+                        );
+                    }
+                    setSearchParams(newSearchParams);
+                  }}
+                />
+                {value}
+              </label>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
@@ -492,56 +545,3 @@ const COLLECTION_QUERY = `#graphql
     }
   }
 ` as const;
-
-function FilterOptions({
-  productOptions,
-  selectedFilters,
-  searchParams,
-  setSearchParams,
-}: {
-  productOptions: Record<string, string[]>;
-  selectedFilters: Record<string, string[]>;
-  searchParams: URLSearchParams;
-  setSearchParams: (params: URLSearchParams) => void;
-}) {
-  return (
-    <div style={{marginTop: '2rem', fontSize: 10.5}}>
-      <h3>Filter Options</h3>
-      {Object.entries(productOptions).map(([optionName, values]) => (
-        <div key={optionName} style={{marginBottom: '1rem'}}>
-          <h4 style={{marginBottom: '0.5rem'}}>{optionName}</h4>
-          {values.map((value) => (
-            <div key={value} style={{marginLeft: '0.5rem'}}>
-              <label>
-                <input
-                  type="checkbox"
-                  name={`${optionName}`}
-                  value={value}
-                  checked={selectedFilters[optionName]?.includes(value)}
-                  style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
-                  onChange={(e) => {
-                    const newSearchParams = new URLSearchParams(searchParams);
-                    if (e.target.checked) {
-                      newSearchParams.append(e.target.name, e.target.value);
-                    } else {
-                      // Remove specific name-value pair
-                      const values = newSearchParams.getAll(e.target.name);
-                      newSearchParams.delete(e.target.name);
-                      values
-                        .filter((v) => v !== e.target.value)
-                        .forEach((v) =>
-                          newSearchParams.append(e.target.name, v),
-                        );
-                    }
-                    setSearchParams(newSearchParams);
-                  }}
-                />
-                {value}
-              </label>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
