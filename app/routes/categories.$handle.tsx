@@ -474,19 +474,21 @@ function FilterCheckbox({
           checked={isCheckedLocal}
           style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
           onChange={(e) => {
-            const newSearchParams = new URLSearchParams(searchParams);
-            setIsCheckedLocal(e.target.checked);
-            if (e.target.checked) {
-              newSearchParams.append(e.target.name, e.target.value);
-            } else {
-              // Remove specific name-value pair
-              const values = newSearchParams.getAll(e.target.name);
-              newSearchParams.delete(e.target.name);
-              values
-                .filter((v) => v !== e.target.value)
-                .forEach((v) => newSearchParams.append(e.target.name, v));
-            }
-            setSearchParams(newSearchParams);
+            setSearchParams((prevSearchParams) => {
+              setIsCheckedLocal(e.target.checked);
+              if (e.target.checked) {
+                prevSearchParams.append(e.target.name, e.target.value);
+              } else {
+                // Remove specific name-value pair
+                const values = prevSearchParams.getAll(e.target.name);
+                prevSearchParams.delete(e.target.name);
+                values
+                  .filter((v) => v !== e.target.value)
+                  .forEach((v) => prevSearchParams.append(e.target.name, v));
+              }
+
+              return prevSearchParams;
+            });
           }}
         />
         {value}
