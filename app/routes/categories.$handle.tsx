@@ -3,11 +3,13 @@ import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
 
 import {
   Await,
+  ClientLoaderFunctionArgs,
   Form,
   Link,
   useLoaderData,
   useNavigate,
   useSearchParams,
+  useSubmit,
   type MetaFunction,
 } from '@remix-run/react';
 import type {Storefront} from '@shopify/hydrogen';
@@ -37,6 +39,15 @@ export async function loader(args: LoaderFunctionArgs) {
 
   return defer({...deferredData, ...criticalData});
 }
+
+export async function clientLoader({
+  request,
+  serverLoader,
+}: ClientLoaderFunctionArgs) {
+  // During client-side navigations, we hit our exposed API endpoints directly
+  return serverLoader();
+}
+clientLoader.hydrate = true;
 
 /**
  * Load data necessary for rendering content above the fold. This is the critical data
@@ -460,72 +471,25 @@ function FilterCheckbox({
   value: string;
   isChecked: boolean;
 }) {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const [isCheckedLocal, setIsCheckedLocal] = usePropControlledState(isChecked);
+  const submit = useSubmit();
 
   return (
     <div style={{marginLeft: '0.5rem'}}>
-      <label>
-        <input
-          type="checkbox"
-          name={optionName}
-          value={value}
-          checked={isCheckedLocal}
-          style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
-          onChange={(e) => {
-            setSearchParams((prevSearchParams) => {
-              setIsCheckedLocal(e.target.checked);
-              if (e.target.checked) {
-                prevSearchParams.append(e.target.name, e.target.value);
-              } else {
-                // Remove specific name-value pair
-                const values = prevSearchParams.getAll(e.target.name);
-                prevSearchParams.delete(e.target.name);
-                values
-                  .filter((v) => v !== e.target.value)
-                  .forEach((v) => prevSearchParams.append(e.target.name, v));
-              }
-
-              return prevSearchParams;
-            });
-          }}
-        />
-        {value}
-      </label>
+      <input
+        type="checkbox"
+        name={optionName}
+        value={value}
+        checked={isChecked}
+        style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
+        onChange={(e) => {
+          submit(e.currentTarget.form);
+        }}
+      />
+      <label htmlFor={value}>{value}</label>
     </div>
   );
 }
 
-export function useForceUpdate() {
-  const [, forceUpdate] = React.useReducer((c) => c + 1, 0);
-  return forceUpdate;
-}
-
-export function usePropControlledState<T>(
-  propValue: T,
-): [T, React.Dispatch<T>] {
-  const previousPropValueRef = React.useRef<T>(propValue);
-  const localStateRef = React.useRef<T>(propValue);
-
-  // if the prop changes, update the local state ref. there is no need to force a re-render, because we are already in a render phase with the new props
-  if (propValue !== previousPropValueRef.current) {
-    localStateRef.current = propValue;
-    previousPropValueRef.current = propValue;
-  }
-
-  const forceUpdate = useForceUpdate();
-
-  const setLocalState = React.useCallback(
-    (newValue: T) => {
-      localStateRef.current = newValue;
-      forceUpdate();
-    },
-    [forceUpdate],
-  );
-
-  return [localStateRef.current, setLocalState];
-}
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
