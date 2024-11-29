@@ -3,6 +3,7 @@ import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
 
 import {
   Await,
+  Form,
   Link,
   useLoaderData,
   useNavigate,
@@ -17,7 +18,7 @@ import {
   Money,
 } from '@shopify/hydrogen';
 import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Suspense} from 'react';
+import React, {Suspense} from 'react';
 import type {
   CollectionQuery,
   ProductItemFragment,
@@ -249,7 +250,6 @@ function loadDeferredData({context, params, request}: LoaderFunctionArgs) {
 }
 
 export default function Category() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const data = useLoaderData<typeof loader>();
   return (
     <div
@@ -263,8 +263,6 @@ export default function Category() {
         <FilterOptions
           productOptions={data.productOptions}
           selectedFilters={data.selectedFilters}
-          searchParams={searchParams}
-          setSearchParams={setSearchParams}
         />
       </div>
       <div style={{gridColumn: 'content'}}>
@@ -413,56 +411,119 @@ function ProductItem({
 function FilterOptions({
   productOptions,
   selectedFilters,
-  searchParams,
-  setSearchParams,
 }: {
   productOptions: Record<string, string[]>;
   selectedFilters: Record<string, string[]>;
-  searchParams: URLSearchParams;
-  setSearchParams: (params: URLSearchParams) => void;
 }) {
   return (
     <div style={{marginTop: '2rem', fontSize: 10.5}}>
       <h3>Filter Options</h3>
-      {Object.entries(productOptions).map(([optionName, values]) => (
-        <div key={optionName} style={{marginBottom: '1rem'}}>
-          <h4 style={{marginBottom: '0.5rem'}}>{optionName}</h4>
-          {values.map((value) => (
-            <div key={value} style={{marginLeft: '0.5rem'}}>
-              <label>
-                <input
-                  type="checkbox"
-                  name={`${optionName}`}
-                  value={value}
-                  checked={selectedFilters[optionName]?.includes(value)}
-                  style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
-                  onChange={(e) => {
-                    const newSearchParams = new URLSearchParams(searchParams);
-                    if (e.target.checked) {
-                      newSearchParams.append(e.target.name, e.target.value);
-                    } else {
-                      // Remove specific name-value pair
-                      const values = newSearchParams.getAll(e.target.name);
-                      newSearchParams.delete(e.target.name);
-                      values
-                        .filter((v) => v !== e.target.value)
-                        .forEach((v) =>
-                          newSearchParams.append(e.target.name, v),
-                        );
-                    }
-                    setSearchParams(newSearchParams);
-                  }}
-                />
-                {value}
-              </label>
-            </div>
-          ))}
-        </div>
-      ))}
+      <Form method="get">
+        {Object.entries(productOptions).map(([optionName, values]) => (
+          <div key={optionName} style={{marginBottom: '1rem'}}>
+            <h4 style={{marginBottom: '0.5rem'}}>{optionName}</h4>
+            {values.map((value) => (
+              <FilterCheckbox
+                key={value}
+                optionName={optionName}
+                value={value}
+                isChecked={selectedFilters[optionName]?.includes(value)}
+              />
+            ))}
+          </div>
+        ))}
+        <button
+          type="submit"
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            fontSize: '0.875rem',
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            borderRadius: '0.25rem',
+            cursor: 'pointer',
+          }}
+        >
+          Apply Filters
+        </button>
+      </Form>
     </div>
   );
 }
 
+function FilterCheckbox({
+  optionName,
+  value,
+  isChecked,
+}: {
+  optionName: string;
+  value: string;
+  isChecked: boolean;
+}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [isCheckedLocal, setIsCheckedLocal] = usePropControlledState(isChecked);
+
+  return (
+    <div style={{marginLeft: '0.5rem'}}>
+      <label>
+        <input
+          type="checkbox"
+          name={optionName}
+          value={value}
+          checked={isCheckedLocal}
+          style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
+          onChange={(e) => {
+            const newSearchParams = new URLSearchParams(searchParams);
+            setIsCheckedLocal(e.target.checked);
+            if (e.target.checked) {
+              newSearchParams.append(e.target.name, e.target.value);
+            } else {
+              // Remove specific name-value pair
+              const values = newSearchParams.getAll(e.target.name);
+              newSearchParams.delete(e.target.name);
+              values
+                .filter((v) => v !== e.target.value)
+                .forEach((v) => newSearchParams.append(e.target.name, v));
+            }
+            setSearchParams(newSearchParams);
+          }}
+        />
+        {value}
+      </label>
+    </div>
+  );
+}
+
+export function useForceUpdate() {
+  const [, forceUpdate] = React.useReducer((c) => c + 1, 0);
+  return forceUpdate;
+}
+
+export function usePropControlledState<T>(
+  propValue: T,
+): [T, React.Dispatch<T>] {
+  const previousPropValueRef = React.useRef<T>(propValue);
+  const localStateRef = React.useRef<T>(propValue);
+
+  // if the prop changes, update the local state ref. there is no need to force a re-render, because we are already in a render phase with the new props
+  if (propValue !== previousPropValueRef.current) {
+    localStateRef.current = propValue;
+    previousPropValueRef.current = propValue;
+  }
+
+  const forceUpdate = useForceUpdate();
+
+  const setLocalState = React.useCallback(
+    (newValue: T) => {
+      localStateRef.current = newValue;
+      forceUpdate();
+    },
+    [forceUpdate],
+  );
+
+  return [localStateRef.current, setLocalState];
+}
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
