@@ -1,7 +1,14 @@
 import {CategoryAndSubCategoriesDetailPageStyle} from '../components/CategoryAndSubCategories';
 import {CATEGORIES_METAOBJECT_QUERY, processCategory} from '../lib/categories';
 
-import {Await, Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import {
+  Await,
+  Link,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+  type MetaFunction,
+} from '@remix-run/react';
 import type {Storefront} from '@shopify/hydrogen';
 import {
   Analytics,
@@ -66,16 +73,142 @@ async function loadCriticalData({
 
   const processedCategory = processCategory(category);
 
+  const entireCollection = await loadCollection(
+    processedCategory.collectionHandle!,
+    context.storefront,
+    request,
+  );
+
+  const allProducts = entireCollection.collection?.products.nodes || [];
+
+  const productOptions = buildProductOptionsFromProducts(allProducts);
+
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
+
+  const selectedFilters = buildSelectedFiltersFromSearchParams(searchParams);
+  const selectedFilterOptionNames = Object.keys(selectedFilters);
+
+  const filteredProducts = filterProductsBySelectedOptions(
+    allProducts,
+    selectedFilterOptionNames,
+    selectedFilters,
+  );
+
+  // Update the collection products with filtered results
+  if (entireCollection.collection) {
+    entireCollection.collection.products.nodes = filteredProducts;
+  }
+
   return {
     selectedCategory: processedCategory,
     topLevelCategories: processCategory(rootCategory).subCategories,
     // BB NOTE: making this awaited does not seem to significantly affect performance
-    collectionPromise: await loadCollection(
-      processedCategory.collectionHandle!,
-      context.storefront,
-      request,
-    ),
+    collectionPromise: entireCollection,
+    productOptions,
+    selectedFilters,
   };
+}
+
+function buildSelectedFiltersFromSearchParams(
+  searchParams: URLSearchParams,
+): Record<string, string[]> {
+  // Build selectedFilters from URL search params
+  const selectedFilters: Record<string, Set<string>> = {};
+  for (const [name, value] of searchParams) {
+    if (!selectedFilters[name]) {
+      selectedFilters[name] = new Set();
+    }
+    selectedFilters[name].add(value);
+  }
+
+  // Convert selectedFilters to a JSON-serializable object
+  const selectedFiltersObject: Record<string, string[]> = {};
+  for (const [name, values] of Object.entries(selectedFilters)) {
+    selectedFiltersObject[name] = Array.from(values);
+  }
+
+  return selectedFiltersObject;
+}
+
+function buildProductOptionsFromProducts(
+  allProducts: ProductItemFragment[],
+): Record<string, string[]> {
+  const optionValues = new Map<string, Set<string>>();
+  allProducts.forEach((product) => {
+    product.variants.nodes.forEach((variant) =>
+      variant.selectedOptions.forEach((option, index) => {
+        const optionName = product.options[index].name;
+        if (!optionValues.has(optionName)) {
+          optionValues.set(optionName, new Set());
+        }
+        optionValues.get(optionName)?.add(option.value);
+      }),
+    );
+  });
+
+  // turning optionValues into a stringifiable object
+  const productOptions: Record<string, string[]> = {};
+  for (const [optionName, values] of optionValues) {
+    productOptions[optionName] = Array.from(values);
+  }
+
+  return productOptions;
+}
+
+function filterProductsBySelectedOptions(
+  products: ProductItemFragment[],
+  selectedFilterOptionNames: string[],
+  selectedFilters: Record<string, string[]>,
+) {
+  return products
+    .map((product) => {
+      // if there are no selected filters, include all products
+      if (selectedFilterOptionNames.length === 0) {
+        return product;
+      }
+
+      // if there is a selected filter that the product does not have, exclude it
+      if (
+        !selectedFilterOptionNames.every((optionName) =>
+          product.options.some((option) => option.name === optionName),
+        )
+      ) {
+        return null;
+      }
+
+      // Filter variants that match all selected filters
+      const filteredVariants = product.variants.nodes.filter((variant) => {
+        return variant.selectedOptions.every((option) => {
+          const selectedValuesForOption = selectedFilters[option.name];
+          // If no filter is selected for this option, include all values
+          if (
+            !selectedValuesForOption ||
+            selectedValuesForOption.length === 0
+          ) {
+            return true;
+          }
+
+          // Check if the variant's option value matches any selected values
+          return selectedValuesForOption.includes(option.value);
+        });
+      });
+
+      // If product has no matching variants after filtering, exclude it
+      if (filteredVariants.length === 0) {
+        return null;
+      }
+
+      // Return product with filtered variants
+      return {
+        ...product,
+        variants: {
+          ...product.variants,
+          nodes: filteredVariants,
+        },
+      };
+    })
+    .filter(Boolean); // Remove null products
 }
 
 function loadCollection(
@@ -116,6 +249,7 @@ function loadDeferredData({context, params, request}: LoaderFunctionArgs) {
 }
 
 export default function Category() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const data = useLoaderData<typeof loader>();
   return (
     <div
@@ -126,6 +260,12 @@ export default function Category() {
     >
       <div style={{gridColumn: 'navigation'}}>
         <NavigationSidebar categories={data.topLevelCategories} />
+        <FilterOptions
+          productOptions={data.productOptions}
+          selectedFilters={data.selectedFilters}
+          searchParams={searchParams}
+          setSearchParams={setSearchParams}
+        />
       </div>
       <div style={{gridColumn: 'content'}}>
         <CategoryAndSubCategoriesDetailPageStyle
@@ -352,3 +492,56 @@ const COLLECTION_QUERY = `#graphql
     }
   }
 ` as const;
+
+function FilterOptions({
+  productOptions,
+  selectedFilters,
+  searchParams,
+  setSearchParams,
+}: {
+  productOptions: Record<string, string[]>;
+  selectedFilters: Record<string, string[]>;
+  searchParams: URLSearchParams;
+  setSearchParams: (params: URLSearchParams) => void;
+}) {
+  return (
+    <div style={{marginTop: '2rem', fontSize: 10.5}}>
+      <h3>Filter Options</h3>
+      {Object.entries(productOptions).map(([optionName, values]) => (
+        <div key={optionName} style={{marginBottom: '1rem'}}>
+          <h4 style={{marginBottom: '0.5rem'}}>{optionName}</h4>
+          {values.map((value) => (
+            <div key={value} style={{marginLeft: '0.5rem'}}>
+              <label>
+                <input
+                  type="checkbox"
+                  name={`${optionName}`}
+                  value={value}
+                  checked={selectedFilters[optionName]?.includes(value)}
+                  style={{transform: 'scale(0.9)', verticalAlign: 'middle'}}
+                  onChange={(e) => {
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    if (e.target.checked) {
+                      newSearchParams.append(e.target.name, e.target.value);
+                    } else {
+                      // Remove specific name-value pair
+                      const values = newSearchParams.getAll(e.target.name);
+                      newSearchParams.delete(e.target.name);
+                      values
+                        .filter((v) => v !== e.target.value)
+                        .forEach((v) =>
+                          newSearchParams.append(e.target.name, v),
+                        );
+                    }
+                    setSearchParams(newSearchParams);
+                  }}
+                />
+                {value}
+              </label>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
