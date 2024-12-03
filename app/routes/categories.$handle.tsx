@@ -69,11 +69,13 @@ async function loadCriticalData({
       variables: {
         handle: handle!,
       },
+      cache: context.storefront.CacheLong(),
     }),
     context.storefront.query(CATEGORIES_METAOBJECT_QUERY, {
       variables: {
         handle: 'hardware',
       },
+      cache: context.storefront.CacheLong(),
     }),
   ]);
 
@@ -239,6 +241,7 @@ function loadCollection(
 
   const collection = storefront.query(COLLECTION_QUERY, {
     variables: {handle: collectionHandle, ...paginationVariables},
+    cache: storefront.CacheLong(),
     // Add other queries here, so that they are loaded in parallel
   });
 

@@ -32,6 +32,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
       variables: {
         handle: 'hardware', // this is the root category from which all categories are fetched
       },
+      cache: context.storefront.CacheLong(),
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
